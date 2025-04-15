@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Katy Perry – Starfield View</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .tooltip {
+      position: absolute;
+      color: white;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <video autoplay loop muted playsinline id="video">
+      <source src="KatyPerry_BlueOrigin_C2-moshed-04-15-12-35-55-744.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+
+  <script>
+    const container = document.getElementById("container");
+    const tooltip = document.getElementById("tooltip");
+    const videoWidth = 4032;
+    const videoHeight = 2304;
+
+    async function cargarCSV() {
+      const response = await fetch("KatyPerry_BlueOrigin_StarNames.csv");
+      const data = await response.text();
+      const rows = data.trim().split("\n").slice(1);
+      return rows.map((row) => {
+        const [Index, HIP, Vmag, X, Y, Tipo, Name] = row.split(",");
+        return {
+          HIP,
+          Name,
+          X: parseFloat(X),
+          Y: parseFloat(Y)
+        };
+      });
+    }
+
+    function crearHotspots(estrellas) {
+      const contAncho = container.offsetWidth;
+      const contAlto = container.offsetHeight;
+
+      const escalaX = contAncho / videoWidth;
+      const escalaY = contAlto / videoHeight;
+
+      estrellas.forEach((estrella) => {
+        const div = document.createElement("div");
+        div.style.position = "absolute";
+        div.style.left = `${estrella.X * escalaX}px`;
+        div.style.top = `${estrella.Y * escalaY}px`;
+        div.style.width = `30px`;
+        div.style.height = `30px`;
+        div.style.opacity = 0;
+        div.style.zIndex = 5;
+
+        div.addEventListener("mouseenter", (e) => {
+          const nombre = estrella.Name ? `${estrella.Name} – HIP ${estrella.HIP}` : `HIP ${estrella.HIP}`;
+          tooltip.textContent = nombre;
+          tooltip.style.left = `${e.pageX + 15}px`;
+          tooltip.style.top = `${e.pageY + 15}px`;
+          tooltip.style.opacity = 1;
+        });
+
+        div.addEventListener("mousemove", (e) => {
+          tooltip.style.left = `${e.pageX + 15}px`;
+          tooltip.style.top = `${e.pageY + 15}px`;
+        });
+
+        div.addEventListener("mouseleave", () => {
+          tooltip.style.opacity = 0;
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    window.onload = async () => {
+      const estrellas = await cargarCSV();
+      crearHotspots(estrellas);
+    };
+  </script>
+</body>
+</html>
